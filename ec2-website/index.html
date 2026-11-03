@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bloom & Bundle</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#fbf7f1;--card:#fff;--ink:#2b2a28;--muted:#7a756d;--line:#ece4d8;--accent:#2f5d50;--accent-2:#e86a5c}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+  header{padding:28px 24px 8px;max-width:1150px;margin:0 auto}
+  h1{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(28px,4vw,40px);letter-spacing:-.5px}
+  h1 span{color:var(--accent-2)}
+  header p{color:var(--muted);margin-top:6px}
+  main{max-width:1150px;margin:0 auto;padding:16px 24px 48px;display:grid;grid-template-columns:1.2fr 1fr;gap:28px;align-items:start}
+  @media(max-width:860px){main{grid-template-columns:1fr}}
+  h2{font-family:'Fraunces',serif;font-size:20px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:baseline}
+  h2 small{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--muted);font-weight:500}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+  .flower{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 12px 12px;text-align:center;transition:transform .15s,box-shadow .15s;cursor:pointer;user-select:none}
+  .flower:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(60,40,20,.08)}
+  .flower.on{box-shadow:0 0 0 2px var(--accent) inset}
+  .flower svg{width:84px;height:84px}
+  .flower .name{font-weight:700;margin-top:4px}
+  .flower .meaning{font-size:12px;color:var(--muted)}
+  .qty{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:10px}
+  .qty button{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:18px;line-height:1;cursor:pointer;color:var(--ink)}
+  .qty button:hover:not(:disabled){background:var(--accent);color:#fff;border-color:var(--accent)}
+  .qty button:disabled{opacity:.35;cursor:not-allowed}
+  .qty .n{min-width:18px;font-weight:700}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px;position:sticky;top:16px}
+  .stage{background:radial-gradient(circle at 50% 40%,#fff 0,#f6efe4 70%);border-radius:16px;aspect-ratio:400/460;display:grid;place-items:center;overflow:hidden;position:relative}
+  .stage svg{width:100%;height:100%}
+  .empty{position:absolute;color:var(--muted);text-align:center;padding:20px;font-size:14px}
+  .label{font-size:12px;font-weight:700;margin:16px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  .swatches{display:flex;gap:10px}
+  .sw{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px var(--line);cursor:pointer}
+  .sw.on{box-shadow:0 0 0 2px var(--accent)}
+  input,textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;background:#fffdf9;margin-bottom:8px;resize:none}
+  input:focus,textarea:focus{outline:2px solid var(--accent);border-color:transparent}
+  .row{display:flex;gap:8px}
+  .btn{width:100%;margin-top:8px;padding:14px;border:0;border-radius:14px;background:var(--accent);color:#fff;font:700 16px 'DM Sans',sans-serif;cursor:pointer;transition:filter .15s}
+  .btn:hover{filter:brightness(1.1)}
+  .btn:disabled{background:#b9b3a9;cursor:not-allowed}
+  .btn.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+  .summary{font-size:13px;color:var(--muted);margin-top:10px;min-height:18px}
+  .clear{background:none;border:0;color:var(--accent-2);font:600 13px 'DM Sans',sans-serif;cursor:pointer}
+  #published{position:fixed;inset:0;background:rgba(43,42,40,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:10}
+  #published.show{display:flex}
+  .card{background:var(--bg);border-radius:26px;max-width:460px;width:100%;padding:26px;text-align:center;animation:pop .5s cubic-bezier(.2,1.4,.4,1);max-height:95vh;overflow:auto}
+  @keyframes pop{from{transform:scale(.85);opacity:0}to{transform:none;opacity:1}}
+  .card .tag{display:inline-block;background:var(--accent);color:#fff;font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;letter-spacing:.05em}
+  .card h3{font-family:'Fraunces',serif;font-size:28px;margin:12px 0 4px}
+  .card .msg{font-family:'Fraunces',serif;font-style:italic;font-size:17px;margin:10px 0;color:#4a463f;white-space:pre-wrap}
+  .card .from{color:var(--muted);font-size:14px}
+  .card .bq{width:100%;max-width:300px;margin:6px auto 0;display:block}
+  .card .meta{font-size:13px;color:var(--muted);margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Bloom <span>&amp;</span> Bundle</h1>
+  <p>Pick your flowers, wrap them up, and publish your bouquet.</p>
+</header>
+
+<main>
+  <section>
+    <h2>Choose flowers <small id="countLbl">0 / 18 stems</small></h2>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <aside class="panel">
+    <h2>Your bouquet <button class="clear" id="clear">Clear</button></h2>
+    <div class="stage">
+      <svg id="preview" viewBox="0 0 400 460"></svg>
+      <div class="empty" id="empty">Tap a flower to start your bouquet 🌱</div>
+    </div>
+    <div class="summary" id="summary"></div>
+
+    <div class="label">Wrapping</div>
+    <div class="swatches" id="swatches"></div>
+
+    <div class="label">Card</div>
+    <div class="row">
+      <input id="to" placeholder="To" maxlength="30">
+      <input id="from" placeholder="From" maxlength="30">
+    </div>
+    <textarea id="msg" rows="2" placeholder="Write a little message…" maxlength="140"></textarea>
+    <button class="btn" id="publish" disabled>Publish bouquet</button>
+  </aside>
+</main>
+
+<div id="published">
+  <div class="card">
+    <span class="tag">PUBLISHED</span>
+    <h3 id="pTo"></h3>
+    <svg class="bq" id="final" viewBox="0 0 400 460"></svg>
+    <p class="msg" id="pMsg"></p>
+    <p class="from" id="pFrom"></p>
+    <p class="meta" id="pMeta"></p>
+    <button class="btn" id="download">Download image</button>
+    <button class="btn ghost" id="again">Make another</button>
+  </div>
+</div>
+
+<script>
+const MAX = 18;
+
+const FLOWERS = [
+  {id:'rose',       name:'Rose',       meaning:'Love',       type:'rose',       p:'#e0476b', p2:'#b8264b', c:'#8e1b3a'},
+  {id:'sunflower',  name:'Sunflower',  meaning:'Joy',        type:'sunflower',  p:'#f7c531', p2:'#e9a81c', c:'#6b3e1d'},
+  {id:'tulip',      name:'Tulip',      meaning:'Warmth',     type:'tulip',      p:'#ff7a59', p2:'#d8462f'},
+  {id:'daisy',      name:'Daisy',      meaning:'Innocence',  type:'daisy',      p:'#ffffff', p2:'#e3dccf', c:'#f4b400'},
+  {id:'lavender',   name:'Lavender',   meaning:'Calm',       type:'lavender',   p:'#9b7fd4', p2:'#7b5dbd'},
+  {id:'lily',       name:'Lily',       meaning:'Purity',     type:'lily',       p:'#fff6ef', p2:'#f3a3b8', c:'#c9762b'},
+  {id:'peony',      name:'Peony',      meaning:'Prosperity', type:'peony',      p:'#f7b2c8', p2:'#ee86a8', c:'#fbe0ea'},
+  {id:'cornflower', name:'Cornflower', meaning:'Hope',       type:'cornflower', p:'#4a7bd8', p2:'#2f58b0', c:'#24306e'},
+];
+
+const WRAPS = [
+  {id:'kraft', back:'#c49a6c', front:'#dcb88f', ribbon:'#b23a48'},
+  {id:'blush', back:'#e8a7b3', front:'#f6ccd4', ribbon:'#ffffff'},
+  {id:'sage',  back:'#98b592', front:'#bdd3b7', ribbon:'#f7f1e3'},
+  {id:'navy',  back:'#22304a', front:'#33466a', ribbon:'#e6c36a'},
+];
+
+// Where each stem sits in the bouquet (first slots fill the centre)
+const SLOTS = [[200,175],[160,195],[240,195],[200,130],[125,165],[275,165],[158,138],[242,138],[200,218],
+               [118,215],[282,215],[166,96],[234,96],[88,125],[312,125],[200,84],[128,104],[272,104]];
+
+const counts = {};
+FLOWERS.forEach(f => counts[f.id] = 0);
+let wrap = WRAPS[0];
+
+// ---------- Drawing ----------
+function ring(n, fn){ let s=''; for(let i=0;i<n;i++) s += fn(i*360/n, i); return s; }
+
+function flowerSVG(f){
+  switch(f.type){
+    case 'rose':
+      return ring(5,a=>`<circle cx="0" cy="-13" r="13" fill="${f.p}" transform="rotate(${a})"/>`)
+           + ring(5,a=>`<circle cx="0" cy="-7" r="9" fill="${f.p2}" transform="rotate(${a+36})"/>`)
+           + `<circle r="7" fill="${f.c}"/><path d="M-3,-2 a4,4 0 1,1 4,4" stroke="${f.p}" stroke-width="2" fill="none"/>`;
+    case 'peony':
+      return ring(8,a=>`<circle cx="0" cy="-16" r="12" fill="${f.p}" transform="rotate(${a})"/>`)
+           + ring(6,a=>`<circle cx="0" cy="-9" r="10" fill="${f.p2}" transform="rotate(${a+30})"/>`)
+           + ring(4,a=>`<circle cx="0" cy="-4" r="6" fill="${f.c}" transform="rotate(${a+45})"/>`);
+    case 'sunflower':
+      return ring(16,(a,i)=>`<ellipse cx="0" cy="-20" rx="5" ry="13" fill="${i%2?f.p:f.p2}" transform="rotate(${a})"/>`)
+           + `<circle r="13" fill="${f.c}"/><circle r="8" fill="#4a2a12"/>`;
+    case 'daisy':
+      return ring(14,a=>`<ellipse cx="0" cy="-17" rx="4.5" ry="12" fill="${f.p}" stroke="${f.p2}" stroke-width="1" transform="rotate(${a})"/>`)
+           + `<circle r="8" fill="${f.c}"/>`;
+    case 'cornflower':
+      return ring(10,a=>`<path d="M0,-4 C-8,-14 -7,-24 -4,-29 L0,-25 L4,-29 C7,-24 8,-14 0,-4Z" fill="${f.p}" transform="rotate(${a})"/>`)
+           + ring(10,a=>`<path d="M0,-4 C-4,-10 -3,-16 0,-19 C3,-16 4,-10 0,-4Z" fill="${f.p2}" transform="rotate(${a+18})"/>`)
+           + `<circle r="5" fill="${f.c}"/>`;
+    case 'lily':
+      return ring(6,a=>`<g transform="rotate(${a})"><path d="M0,0 C-11,-12 -7,-26 0,-32 C7,-26 11,-12 0,0Z" fill="${f.p}" stroke="${f.p2}" stroke-width="1"/><path d="M0,-4 L0,-24" stroke="${f.p2}" stroke-width="2.5" stroke-linecap="round"/></g>`)
+           + ring(5,a=>`<g transform="rotate(${a})"><line x1="0" y1="0" x2="0" y2="-13" stroke="#7a9a3a" stroke-width="1.2"/><ellipse cx="0" cy="-14" rx="1.6" ry="3" fill="${f.c}"/></g>`);
+    case 'tulip':
+      return `<g transform="translate(0,4)">
+        <path d="M0,14 C-10,4 -9,-18 0,-26 C9,-18 10,4 0,14Z" fill="${f.p2}"/>
+        <path d="M0,14 C-19,8 -19,-14 -9,-24 C-5,-13 -2,-3 0,14Z" fill="${f.p}"/>
+        <path d="M0,14 C19,8 19,-14 9,-24 C5,-13 2,-3 0,14Z" fill="${f.p}"/></g>`;
+    case 'lavender': {
+      let s = `<line x1="0" y1="30" x2="0" y2="-28" stroke="#6f8f4e" stroke-width="2"/>`;
+      for(let i=0;i<9;i++){
+        const y = 24 - i*6.5, w = 4.5 - i*0.25;
+        s += `<ellipse cx="${-w}" cy="${y}" rx="${w}" ry="5" fill="${i%2?f.p:f.p2}"/>
+              <ellipse cx="${w}" cy="${y-2}" rx="${w}" ry="5" fill="${i%2?f.p2:f.p}"/>`;
+      }
+      return s + `<ellipse cx="0" cy="-30" rx="3" ry="4.5" fill="${f.p}"/>`;
+    }
+  }
+}
+
+// Mix flower types so the same kind isn't all clumped together
+function expand(){
+  const left = {...counts}, list = [];
+  let added = true;
+  while(added){
+    added = false;
+    for(const f of FLOWERS){ if(left[f.id] > 0){ list.push(f); left[f.id]--; added = true; } }
+  }
+  return list;
+}
+
+function bouquetSVG(){
+  const list = expand();
+  if(!list.length) return '';
+  const w = wrap;
+  const placed = list.map((f,i)=>({f, x:SLOTS[i][0], y:SLOTS[i][1], r:((i*47)%21)-10}));
+
+  const stems = placed.map(p=>`<line x1="${p.x}" y1="${p.y}" x2="200" y2="365" stroke="#5f8a46" stroke-width="3" stroke-linecap="round"/>`).join('');
+  const leaves = `
+    <ellipse cx="105" cy="235" rx="14" ry="42" fill="#6f9a52" transform="rotate(-40 105 235)"/>
+    <ellipse cx="295" cy="235" rx="14" ry="42" fill="#6f9a52" transform="rotate(40 295 235)"/>
+    <ellipse cx="150" cy="255" rx="10" ry="30" fill="#5f8a46" transform="rotate(-15 150 255)"/>
+    <ellipse cx="250" cy="255" rx="10" ry="30" fill="#5f8a46" transform="rotate(15 250 255)"/>`;
+  const backPaper = `<path d="M55,180 L85,160 L115,178 L145,158 L175,176 L200,156 L225,176 L255,158 L285,178 L315,160 L345,180 L232,420 L168,420Z" fill="${w.back}"/>`;
+  const flowers = [...placed].sort((a,b)=>a.y-b.y)
+    .map(p=>`<g transform="translate(${p.x},${p.y}) rotate(${p.r}) scale(1.2)">${flowerSVG(p.f)}</g>`).join('');
+  const front = `
+    <path d="M95,250 Q200,285 305,250 L216,432 L184,432 Z" fill="${w.front}"/>
+    <path d="M150,272 L195,430" stroke="rgba(0,0,0,.08)" stroke-width="2"/>
+    <path d="M250,272 L205,430" stroke="rgba(0,0,0,.08)" stroke-width="2"/>`;
+  const ribbon = `
+    <ellipse cx="182" cy="372" rx="20" ry="11" fill="none" stroke="${w.ribbon}" stroke-width="6" transform="rotate(-20 182 372)"/>
+    <ellipse cx="218" cy="372" rx="20" ry="11" fill="none" stroke="${w.ribbon}" stroke-width="6" transform="rotate(20 218 372)"/>
+    <path d="M196,376 L182,410" stroke="${w.ribbon}" stroke-width="6" stroke-linecap="round"/>
+    <path d="M204,376 L218,410" stroke="${w.ribbon}" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="200" cy="373" r="6" fill="${w.ribbon}"/>`;
+  const shadow = `<ellipse cx="200" cy="442" rx="60" ry="8" fill="rgba(0,0,0,.07)"/>`;
+
+  return shadow + backPaper + stems + leaves + flowers + front + ribbon;
+}
+
+// ---------- UI ----------
+const $ = id => document.getElementById(id);
+const total = () => Object.values(counts).reduce((a,b)=>a+b, 0);
+const plural = (name, n) => n === 1 ? name : (/y$/.test(name) ? name.slice(0,-1) + 'ies' : name + 's');
+const summaryText = () => FLOWERS.filter(f=>counts[f.id]).map(f=>`${counts[f.id]} ${plural(f.name, counts[f.id])}`).join(' · ');
+
+function buildGrid(){
+  $('grid').innerHTML = FLOWERS.map(f=>`
+    <div class="flower" data-id="${f.id}">
+      <svg viewBox="-40 -40 80 80">${flowerSVG(f)}</svg>
+      <div class="name">${f.name}</div>
+      <div class="meaning">${f.meaning}</div>
+      <div class="qty">
+        <button data-act="dec" aria-label="Remove ${f.name}">−</button>
+        <span class="n">0</span>
+        <button data-act="inc" aria-label="Add ${f.name}">+</button>
+      </div>
+    </div>`).join('');
+
+  $('grid').addEventListener('click', e=>{
+    const card = e.target.closest('.flower');
+    if(!card) return;
+    const id = card.dataset.id;
+    const act = e.target.dataset.act || 'inc';
+    if(act === 'inc' && total() < MAX) counts[id]++;
+    if(act === 'dec' && counts[id] > 0) counts[id]--;
+    render();
+  });
+}
+
+function buildSwatches(){
+  $('swatches').innerHTML = WRAPS.map(w=>`<button class="sw" data-id="${w.id}" title="${w.id}" style="background:${w.front}"></button>`).join('');
+  $('swatches').addEventListener('click', e=>{
+    const id = e.target.dataset.id;
+    if(!id) return;
+    wrap = WRAPS.find(w=>w.id === id);
+    render();
+  });
+}
+
+function render(){
+  const t = total();
+  document.querySelectorAll('.flower').forEach(card=>{
+    const n = counts[card.dataset.id];
+    card.querySelector('.n').textContent = n;
+    card.classList.toggle('on', n > 0);
+    card.querySelector('[data-act=dec]').disabled = n === 0;
+    card.querySelector('[data-act=inc]').disabled = t >= MAX;
+  });
+  document.querySelectorAll('.sw').forEach(s=>s.classList.toggle('on', s.dataset.id === wrap.id));
+  $('countLbl').textContent = `${t} / ${MAX} stems`;
+  $('preview').innerHTML = bouquetSVG();
+  $('empty').style.display = t ? 'none' : 'block';
+  $('summary').textContent = summaryText();
+  $('publish').disabled = t === 0;
+}
+
+$('clear').onclick = () => { FLOWERS.forEach(f=>counts[f.id]=0); render(); };
+
+$('publish').onclick = () => {
+  const to = $('to').value.trim(), from = $('from').value.trim(), msg = $('msg').value.trim();
+  $('final').innerHTML = bouquetSVG();
+  $('pTo').textContent = to ? `For ${to}` : 'A bouquet for you';
+  $('pMsg').textContent = msg;
+  $('pFrom').textContent = from ? `— with love, ${from}` : '';
+  $('pMeta').textContent = `${summaryText()} · ${new Date().toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'})}`;
+  $('published').classList.add('show');
+};
+
+$('again').onclick = () => {
+  $('published').classList.remove('show');
+  FLOWERS.forEach(f=>counts[f.id]=0);
+  ['to','from','msg'].forEach(id=>$(id).value='');
+  render();
+};
+
+$('download').onclick = () => {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 460" width="800" height="920">${bouquetSVG()}</svg>`;
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement('canvas');
+    c.width = 800; c.height = 920;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#fbf7f1'; ctx.fillRect(0,0,800,920);
+    ctx.drawImage(img, 0, 0);
+    c.toBlob(b=>{
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(b);
+      a.download = 'my-bouquet.png';
+      a.click();
+    });
+  };
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+};
+
+buildGrid();
+buildSwatches();
+render();
+</script>
+</body>
+</html>
